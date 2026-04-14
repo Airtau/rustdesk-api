@@ -1,0 +1,2 @@
+FROM lejianwen/rustdesk-api:full-s6-amd64
+COPY ./resources/admin /app/resources/admin

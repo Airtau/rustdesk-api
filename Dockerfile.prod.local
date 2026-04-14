@@ -1,0 +1,63 @@
+# Stage 1: Build backend
+FROM crazymax/xgo:1.23 AS builder-backend
+
+WORKDIR /app
+COPY . .
+
+RUN go mod tidy && go mod download && go install github.com/swaggo/swag/cmd/swag@latest
+
+RUN swag init -g cmd/apimain.go --output docs/api --instanceName api --exclude http/controller/admin && \
+    swag init -g cmd/apimain.go --output docs/admin --instanceName admin --exclude http/controller/api
+
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a \
+    -ldflags "-s -w --extldflags '-static -fpic'" \
+    -installsuffix cgo -o release/apimain cmd/apimain.go
+
+# Stage 2: Final image with s6 overlay
+FROM rustdesk/rustdesk-server-s6:latest AS server
+
+FROM alpine:latest
+
+ARG BUILDARCH=amd64
+WORKDIR /app
+
+RUN apk add --no-cache tzdata file
+
+# Copy backend
+COPY --from=builder-backend /app/release /app/
+COPY --from=builder-backend /app/conf /app/conf/
+COPY --from=builder-backend /app/docs /app/docs/
+
+# Копируем локальную сборку фронтенда
+COPY ./resources/admin /app/resources/admin
+
+# Copy s6 components from rustdesk-server
+COPY --from=server /init /init
+COPY --from=server /etc/s6-overlay /etc/s6-overlay
+COPY --from=server /package /package
+COPY --from=server /usr/bin/healthcheck.sh /usr/bin/healthcheck.sh
+COPY --from=server /usr/bin/hbbr /usr/bin/hbbr
+COPY --from=server /usr/bin/hbbs /usr/bin/hbbs
+COPY --from=server /usr/bin/rustdesk-utils /usr/bin/rustdesk-utils
+COPY --from=server /command /command
+
+# Setup api service in s6
+RUN mkdir -p /etc/s6-overlay/s6-rc.d/api && \
+    echo -e "key-secret\nhbbs" > /etc/s6-overlay/s6-rc.d/api/dependencies && \
+    echo "longrun" > /etc/s6-overlay/s6-rc.d/api/type && \
+    echo "#!/command/with-contenv sh" > /etc/s6-overlay/s6-rc.d/api/run && \
+    echo "cd /app" >> /etc/s6-overlay/s6-rc.d/api/run && \
+    echo "./apimain" >> /etc/s6-overlay/s6-rc.d/api/run && \
+    touch /etc/s6-overlay/s6-rc.d/user/contents.d/api && \
+    echo "/package/admin/s6/command/s6-svstat /run/s6-rc/servicedirs/api || exit 1" >> /usr/bin/healthcheck.sh && \
+    ln -s /run /var/run
+
+ENV RELAY=rdc.sherl.ru
+ENV ENCRYPTED_ONLY=0
+
+VOLUME /data
+VOLUME /app/data
+
+EXPOSE 21114 21115 21116 21116/udp 21117 21118 21119
+
+ENTRYPOINT ["/init"]
