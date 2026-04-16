@@ -16,6 +16,9 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a \
 # Stage 1.5: Build frontend
 FROM node:20-alpine AS builder-frontend
 
+# Устанавливаем git
+RUN apk add --no-cache git
+
 WORKDIR /frontend
 
 # Клонируем ваш фронтенд репозиторий
