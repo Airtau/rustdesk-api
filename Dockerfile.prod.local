@@ -13,6 +13,16 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a \
     -ldflags "-s -w --extldflags '-static -fpic'" \
     -installsuffix cgo -o release/apimain cmd/apimain.go
 
+# Stage 1.5: Build frontend
+FROM node:20-alpine AS builder-frontend
+
+WORKDIR /frontend
+
+# Клонируем ваш фронтенд репозиторий
+RUN git clone https://github.com/Airtau/rustdesk-api-web.git . && \
+    npm install && \
+    npm run build
+
 # Stage 2: Final image with s6 overlay
 FROM rustdesk/rustdesk-server-s6:latest AS server
 
@@ -29,10 +39,8 @@ COPY --from=builder-backend /app/conf /app/conf/
 COPY --from=builder-backend /app/docs /app/docs/
 COPY --from=builder-backend /app/resources /app/resources/
 
-RUN mkdir -p /app/runtime && chmod 777 /app/runtime
-
-# Копируем локальную сборку фронтенда
-COPY ./resources/admin /app/resources/admin
+# Copy frontend build
+COPY --from=builder-frontend /frontend/dist /app/resources/admin
 
 # Copy s6 components from rustdesk-server
 COPY --from=server /init /init
@@ -55,7 +63,7 @@ RUN mkdir -p /etc/s6-overlay/s6-rc.d/api && \
     echo "/package/admin/s6/command/s6-svstat /run/s6-rc/servicedirs/api || exit 1" >> /usr/bin/healthcheck.sh && \
     ln -s /run /var/run
 
-ENV RELAY=rdc.sherl.ru
+ENV RELAY=rdc.airtau.ru
 ENV ENCRYPTED_ONLY=0
 
 VOLUME /data
