@@ -63,3 +63,4 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILDARCH=amd64
+          no-cache: true
