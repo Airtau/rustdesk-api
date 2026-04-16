@@ -27,6 +27,9 @@ RUN apk add --no-cache tzdata file
 COPY --from=builder-backend /app/release /app/
 COPY --from=builder-backend /app/conf /app/conf/
 COPY --from=builder-backend /app/docs /app/docs/
+COPY --from=builder-backend /app/resources /app/resources/
+
+RUN mkdir -p /app/runtime && chmod 777 /app/runtime
 
 # Копируем локальную сборку фронтенда
 COPY ./resources/admin /app/resources/admin
