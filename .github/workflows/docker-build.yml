@@ -59,6 +59,5 @@ jobs:
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BUILDARCH=amd64
-            no-cache: true
+          build-args: BUILDARCH=amd64
+          no-cache: true
