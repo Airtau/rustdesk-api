@@ -2,7 +2,6 @@ package service
 
 import (
     "github.com/lejianwen/rustdesk-api/v2/model"
-    "github.com/lejianwen/rustdesk-api/v2/model/custom_types"
     "time"
 )
 
@@ -82,10 +81,8 @@ func (as *ActiveConnectionsService) ListActive(page, pageSize uint) (list []*Act
         // Добавляем данные из peers
         if peer, ok := peerMap[conn.PeerId]; ok {
             activeConn.Hostname = peer.Hostname
+            // Используем LastOnlineIp из структуры Peer
             activeConn.TargetIP = peer.LastOnlineIp
-            if activeConn.TargetIP == "" {
-                activeConn.TargetIP = peer.IP
-            }
         } else {
             activeConn.Hostname = "-"
             activeConn.TargetIP = "-"
