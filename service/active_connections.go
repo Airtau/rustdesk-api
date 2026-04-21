@@ -2,6 +2,8 @@ package service
 
 import (
     "github.com/lejianwen/rustdesk-api/v2/model"
+    "github.com/lejianwen/rustdesk-api/v2/model/custom_types"
+    "time"
 )
 
 type ActiveConnectionsService struct{}
@@ -56,12 +58,13 @@ func (as *ActiveConnectionsService) ListActive(page, pageSize uint) (list []*Act
     // Формируем результат
     list = make([]*ActiveConnection, 0)
     for _, conn := range auditConns {
-        // Преобразуем AutoTime в строку
+        // Преобразуем AutoTime в строку, используя приведение к time.Time
         var createdAtStr string
-        if t, ok := interface{}(conn.CreatedAt).(interface{ Format(string) string }); ok {
+        t := time.Time(conn.CreatedAt)
+        if !t.IsZero() {
             createdAtStr = t.Format("2006-01-02 15:04:05")
         } else {
-            createdAtStr = conn.CreatedAt.String()
+            createdAtStr = ""
         }
         
         activeConn := &ActiveConnection{
@@ -81,7 +84,7 @@ func (as *ActiveConnectionsService) ListActive(page, pageSize uint) (list []*Act
             activeConn.Hostname = peer.Hostname
             activeConn.TargetIP = peer.LastOnlineIp
             if activeConn.TargetIP == "" {
-                activeConn.TargetIP = peer.Ip
+                activeConn.TargetIP = peer.IP
             }
         } else {
             activeConn.Hostname = "-"
