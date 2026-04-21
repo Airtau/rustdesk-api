@@ -35,6 +35,7 @@ func Init(g *gin.Engine) {
 	OauthBind(adg)
 	LoginLogBind(adg)
 	AuditBind(adg)
+	ActiveConnectionsBind(adg)
 	AddressBookCollectionBind(adg)
 	AddressBookCollectionRuleBind(adg)
 	UserTokenBind(adg)
@@ -321,4 +322,9 @@ func ShareRecordBind(rg *gin.RouterGroup) {
 		aR.POST("/batchDelete", cont.BatchDelete)
 	}
 
+}
+
+func ActiveConnectionsBind(rg *gin.RouterGroup) {
+    cont := &admin.ActiveConnections{}
+    rg.GET("/active_connections/list", cont.List)
 }
