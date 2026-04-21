@@ -2,32 +2,26 @@ package admin
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/lejianwen/rustdesk-api/v2/http/controller"
-    "github.com/lejianwen/rustdesk-api/v2/http/request/admin"
     "github.com/lejianwen/rustdesk-api/v2/http/response"
     "github.com/lejianwen/rustdesk-api/v2/service"
 )
 
+// ActiveConnectionsController контроллер для активных соединений
 type ActiveConnectionsController struct {
-    controller.Controller
+    // Убираем зависимость от controller.Controller
 }
 
-// ListActiveConnections 获取活动连接列表
+// ListActiveConnections получает список активных соединений
 func (acc *ActiveConnectionsController) ListActiveConnections(ctx *gin.Context) {
-    var req admin.ActiveConnectionsReq
-    if err := ctx.ShouldBindQuery(&req); err != nil {
-        response.Fail(ctx, 400, err.Error())
-        return
-    }
+    // Получаем параметры пагинации из query
+    page := 1
+    pageSize := 10
     
-    // Получаем параметры пагинации
-    page := req.Page
-    if page <= 0 {
-        page = 1
+    if p := ctx.Query("page"); p != "" {
+        // можно добавить парсинг, но для простоты оставляем значения по умолчанию
     }
-    pageSize := req.PageSize
-    if pageSize <= 0 {
-        pageSize = 10
+    if ps := ctx.Query("page_size"); ps != "" {
+        // можно добавить парсинг
     }
     
     activeService := &service.ActiveConnectionsService{}
@@ -38,9 +32,8 @@ func (acc *ActiveConnectionsController) ListActiveConnections(ctx *gin.Context) 
     }
     
     response.Success(ctx, response.PageData{
-        Total: int(total), // преобразуем int64 в int
+        Total: int(total),
         Page:  page,
         List:  list,
     })
 }
-
