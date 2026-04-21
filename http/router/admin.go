@@ -35,7 +35,7 @@ func Init(g *gin.Engine) {
 	OauthBind(adg)
 	LoginLogBind(adg)
 	AuditBind(adg)
-//	ActiveConnectionsBind(adg)
+	ActiveConnectionsBind(adg)
 	AddressBookCollectionBind(adg)
 	AddressBookCollectionRuleBind(adg)
 	UserTokenBind(adg)
@@ -324,7 +324,7 @@ func ShareRecordBind(rg *gin.RouterGroup) {
 
 }
 
-//func ActiveConnectionsBind(rg *gin.RouterGroup) {
-//    cont := &admin.ActiveConnections{}
-//    rg.GET("/active_connections/list", cont.List)
-//}
+func ActiveConnectionsBind(rg *gin.RouterGroup) {
+    cont := &admin.ActiveConnections{}
+    rg.GET("/active_connections/list", cont.ListActiveConnections)
+}
