@@ -37,6 +37,7 @@ WORKDIR /app
 RUN apk add --no-cache tzdata file
 
 # Copy backend
+COPY --from=builder-backend /app/release /app/
 # Копируем конфиги и ресурсы
 COPY --from=builder-backend /app/conf /app/conf/
 COPY --from=builder-backend /app/docs /app/docs/
