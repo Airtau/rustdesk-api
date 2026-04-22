@@ -36,6 +36,9 @@ WORKDIR /app
 
 RUN apk add --no-cache tzdata file
 
+RUN ls -la /app/release/ && \
+    test -f /app/release/apimain || (echo "apimain not found!" && exit 1)
+
 # Copy backend
 COPY --from=builder-backend /app/release /app/
 # Копируем конфиги и ресурсы
